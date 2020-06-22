@@ -13,6 +13,7 @@ from requests.auth import HTTPBasicAuth
 class ApiView(APIView):
 
     def put(self, request, pk):
+        print("Esta es la pk: ", pk)
         serializer = serializers.ApiSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         # Primera pegada al site con Get para recuperar los datos con el car_id
@@ -27,18 +28,18 @@ class ApiView(APIView):
         #Segunda pegada al site/_id con Put y hace la actualización de precio y km en el site con el _id
         r = requests.put(f'http://localhost:8000/test/api/v1/site-by-id/{_id}/', data=body)
         if r.status_code >= 400:
-            return Response({'Error msg': 'El car_id es inválido'}, status=400)
+            return Response({'Error msg': 'El _id es inválido'}, status=400)
         #Primera pegada al sitio de Meli con Get para recuperar el seller_id y el status
         r = requests.get(f'http://localhost:8000/test/api/v1/meli/{mlid}/')
         if r.status_code >= 400:
-          return Response({'Error msg': 'el mlid no existe'})
+            return Response({'Error msg': 'el mlid no existe'})
         # Se recuperan los datos
         meli_data = r.json()
         seller_id = meli_data['seller_id']
         status = meli_data['status']
         body = {'mlid': mlid, 'status': status, 'seller_id': seller_id, 'precio': serializer.data['precio'], 'kilometros': serializer.data['kilometros']}
         if status != 'active':
-          return Response({'Warning': 'La publicación no está activa en Meli'})
+            return Response({'Warning': 'La publicación no está activa en Meli'})
         token = get_auth_token(seller_id)
         #Segunda pegada al sitio de Meli con Put para actualizar precio y km con el mlid
         r = requests.put(f'http://localhost:8000/test/api/v1/meli/{mlid}/?access_token={token}', data=body)
